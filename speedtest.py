@@ -55,15 +55,27 @@ def main():
     thread_ready = threading.Event()
     # Download a test 5MB file.
     command = Command("wget http://download.thinkbroadband.com/5MB.zip", thread_ready)
+    sys.stdout.write("Timing...")
+    counter = 0
     while not thread_ready.isSet():
         try:
+            # Print a status every 500,000 context switches. 
+            if (counter == 500000):
+                sys.stdout.write('.') 
+                counter = 0
+            counter += 1
+            # Explicit thread yield
             time.sleep(0)
         except KeyboardInterrupt:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
             print "CONTROL C RECEIVED: SENDING KILL SIGNAL"
             thread_ready.set()
             process = subprocess.Popen("rm 5MB.zip", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             (out, err) = process.communicate()
             sys.exit()
+    sys.stdout.write('\n')
+    sys.stdout.flush()
     print "DONE WITH WGET"
     timetaken = time.clock() - globtime
     print "Total took: " + str(timetaken) + " seconds"
